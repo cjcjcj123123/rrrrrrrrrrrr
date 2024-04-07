@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Class Details</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #2980b9, #2c3e50);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            max-width: 600px;
+            width: 90%;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        canvas {
+            width: 100%;
+            margin-top: 20px;
+        }
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+            <canvas id="priceChart"></canvas>
+
+    </div>
+    <script>
+        // Get the data passed from Flask and extract relevant properties
+        var data = JSON.parse('{{ data | tojson | safe }}');
+        var timeStart = [];
+        var priceSEK = [];
+
+        // Extract relevant data for visualization
+        data.forEach(function(item) {
+            timeStart.push(formatTime(item.time_start)); // Format time to Swedish hours
+            priceSEK.push(item.SEK_per_kWh);
+        });
+
+        // Function to format time to Swedish hours
+        function formatTime(utcTime) {
+            var date = new Date(utcTime);
+            var hours = date.getHours(); // Get hours in UTC
+            // Convert to Swedish time zone if necessary
+            // For example, if Swedish time zone is UTC+1
+            hours = (hours + 1) % 24; // Adjust to Swedish time
+            return hours.toString().padStart(2, '0') + ":00"; // Format as HH:00
+        }
+
+        // Create a line chart for price (SEK per kWh) over time
+        var ctx = document.getElementById('priceChart').getContext('2d');
+        var priceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeStart,
+                datasets: [{
+                    label: 'Price (SEK per kWh)',
+                    data: priceSEK,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return value + ' KR'; // Append 'KR' to tick labels
+                            }
+                        }
+                    }]
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
+
